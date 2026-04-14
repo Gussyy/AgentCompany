@@ -98,7 +98,27 @@ class Orchestrator:
                       self.gate, self.ledger, self.arch, self.core,
                       self.pixel, self.vigil, self.apex, self.haven]
 
-        # Tell every agent the current industry (for long-term memory recall)
+                # â”€â”€ Stop/Comment support â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        import api.server as _srv
+        _srv._stop_requested = False
+        _srv._ceo_comments = []
+
+        def _should_stop():
+            if _srv._stop_requested:
+                from agents.base import _emit
+                _emit("ceo_action","SYSTEM","orchestrator","done","Stopped by CEO request.",{})
+                return True
+            return False
+
+        def _apply_comments():
+            cmts = list(_srv._ceo_comments); _srv._ceo_comments.clear()
+            if cmts:
+                directive = " | ".join(cmts)
+                for a in all_agents: a.set_ceo_directive(directive)
+                from agents.base import _emit
+                _emit("ceo_action","YOU (CEO)","ceo","running",f"Comment injected: {directive}",{})
+
+# Tell every agent the current industry (for long-term memory recall)
         for agent in all_agents:
             agent.set_industry(self.industry)
 

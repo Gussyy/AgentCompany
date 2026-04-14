@@ -224,6 +224,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
       style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;width:200px;font-family:inherit;"
       value="digital health"/>
     <button class="run-btn" id="runBtn" onclick="startRun()">▶ Run Company</button>
+    <button id="stopBtn" onclick="stopRun()" style="display:none;background:#f05a5a;color:#fff;border:none;padding:5px 13px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;">⏹ Stop</button>
   </div>
 </div>
 
@@ -273,7 +274,7 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-
             onkeydown="chatKeydown(event)"></textarea>
           <div class="chat-hint">▶ Run Company for a full pipeline · @AGENT message to talk to a specific agent · Ask anything to start a targeted run</div>
         </div>
-        <button class="chat-send" id="chatSend" onclick="sendChat()">Send</button>
+        <button class="chat-send" id="chatSend" onclick="sendSmartChat()">Send</button>
       </div>
     </div>
 
@@ -605,8 +606,10 @@ function resetUI() {
 function setBusy(busy) {
   const btn=document.getElementById('runBtn');
   const send=document.getElementById('chatSend');
+  const stop=document.getElementById('stopBtn');
   btn.disabled=busy; btn.textContent=busy?'⏳ Running…':'▶ Run Company';
-  if(send) send.disabled=busy;
+  if(stop) stop.style.display = busy ? 'inline-block' : 'none';
+  // Don't disable Send when busy — it becomes mid-run comment mode
 }
 
 function startRun() {
@@ -642,7 +645,39 @@ function sendChat() {
 }
 
 function chatKeydown(e) {
-  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendSmartChat(); }
+}
+
+// ── Stop run ─────────────────────────────────────────────────────────────────
+async function stopRun() {
+  if (!confirm('Stop the current run after the active agent finishes?')) return;
+  await fetch('/stop', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'});
+  document.getElementById('stopBtn').style.display = 'none';
+  const feed = document.getElementById('feed');
+  const card = document.createElement('div');
+  card.className = 'event-card ceo_action';
+  card.innerHTML = `<div class="event-meta"><span class="event-agent" style="color:var(--gold)">YOU (CEO)</span><span class="event-time">${new Date().toLocaleTimeString()}</span></div><div class="event-msg">⏹ Stop requested — run will halt after current agent completes.</div>`;
+  feed.appendChild(card); feed.scrollTop = feed.scrollHeight;
+}
+
+// ── Smart Send: mid-run comment OR new run ───────────────────────────────────
+async function sendSmartChat() {
+  const msg = document.getElementById('chatInput').value.trim();
+  if (!msg) return;
+  const isRunning = document.getElementById('statusBadge').textContent.includes('RUNNING');
+  if (isRunning) {
+    // Inject as mid-run CEO directive
+    document.getElementById('chatInput').value = '';
+    await fetch('/comment', {method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg})});
+    const feed = document.getElementById('feed');
+    const card = document.createElement('div');
+    card.className = 'event-card ceo_action';
+    card.innerHTML = `<div class="event-meta"><span class="event-agent" style="color:var(--gold)">YOU (CEO) — mid-run comment</span><span class="event-time">${new Date().toLocaleTimeString()}</span></div><div class="event-msg">💬 ${msg}</div>`;
+    feed.appendChild(card); feed.scrollTop = feed.scrollHeight;
+  } else {
+    sendChat();
+  }
 }
 
 function connectSSE() {

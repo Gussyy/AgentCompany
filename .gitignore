@@ -73,8 +73,14 @@ pip_*.txt
 *_result.txt
 build_guide*.py
 
-# ── Keep these (generated output worth tracking) ─────────────────────────────
-# reports/         ← keep — AgentCompany analysis reports
-# projects/        ← keep — generated product code & specs
-# data/history.json ← keep — run history
-# data/settings.json ← keep — user settings
+# ── Generated output — do NOT commit ─────────────────────────────────────────
+reports/
+projects/
+*.pptx
+*.pdf
+~$*
+data/history.json
+data/kaggle/
+
+# Keep settings (user config worth tracking)
+# data/settings.json ← tracked

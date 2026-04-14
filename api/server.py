@@ -308,3 +308,39 @@ def dashboard():
     html_path = BASE_DIR / "frontend" / "dashboard.html"
     with open(html_path, "r", encoding="utf-8") as f:
         return f.read()
+
+# â”€â”€ Stop + Mid-run CEO Comments â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+_stop_requested: bool = False
+_ceo_comments: list = []   # mid-run messages injected between agents
+
+@app.post("/stop")
+def stop_run():
+    global _stop_requested
+    _stop_requested = True
+    return {"message": "Stop requested â€” current agent will finish then run will halt."}
+
+@app.post("/comment")
+def add_comment(req: ChatRequest):
+    """Inject a CEO comment/directive into the currently running pipeline."""
+    global _ceo_comments
+    _ceo_comments.append(req.message)
+    push_event(AgentEvent(
+        event_type="ceo_action", agent_name="YOU (CEO)", chamber="ceo",
+        status=__import__("models.schemas", fromlist=["AgentStatus"]).AgentStatus("running"),
+        message=f"ðŸ’¬ CEO comment injected: {req.message}", data={"type": "mid_run_comment"}
+    ))
+    return {"message": "Comment added to pipeline", "queue_length": len(_ceo_comments)}
+
+@app.get("/stop/status")
+def stop_status():
+    return {"stop_requested": _stop_requested, "pending_comments": _ceo_comments}
+
+@app.post("/stop/reset")
+def reset_stop():
+    global _stop_requested, _ceo_comments
+    _stop_requested = False
+    _ceo_comments = []
+    return {"message": "Stop flag and comments cleared"}
+
+
+
