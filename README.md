@@ -2,7 +2,7 @@
 
 > An AI-powered virtual startup simulator. Give it an industry, and a team of 13 specialised AI agents will research the market, design a product, stress-test the finances, and decide whether to build — all in under 10 minutes.
 
-**CEO:** Rachata P. | **AI Backend:** DeepSeek API | **Average run cost:** $0.01–$0.05
+**CEO:** You | **AI Backend:** DeepSeek API | **Average run cost:** $0.01–$0.05
 
 ---
 
@@ -368,4 +368,4 @@ AgentCompany/
 
 ---
 
-*Built with DeepSeek AI · CEO: Rachata P.*
+*Built with DeepSeek AI · CEO: You*
