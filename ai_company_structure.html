@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI Running Company — Refined Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --surface2: #1a1d24;
+    --border: #252830;
+    --border2: #2e3240;
+    --text: #e8eaf0;
+    --muted: #7a7f8e;
+    --accent-blue: #4f8ef7;
+    --accent-purple: #9b6ef7;
+    --accent-green: #3fcf8e;
+    --accent-amber: #f0a83a;
+    --accent-red: #f05a5a;
+    --accent-teal: #3fd4cf;
+    --accent-pink: #f06aaa;
+    --ceo: #f0c43a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 40px 24px 80px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+  .header .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .header h1 {
+    font-size: 36px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #e8eaf0 0%, #7a7f8e 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 10px;
+  }
+  .header .subtitle {
+    color: var(--muted);
+    font-size: 15px;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ── LAYOUT ── */
+  .wrapper {
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* ── FLOW CONNECTOR ── */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+  }
+  .connector-line {
+    width: 2px;
+    height: 28px;
+    background: linear-gradient(to bottom, var(--border2), var(--border2));
+  }
+  .connector-arrow {
+    width: 0; height: 0;
+    border-left: 7px solid transparent;
+    border-right: 7px solid transparent;
+    border-top: 9px solid var(--border2);
+  }
+  .connector.gate .connector-line { background: var(--accent-green); opacity: 0.5; }
+  .connector.gate .connector-arrow { border-top-color: var(--accent-green); opacity: 0.5; }
+
+  /* ── CEO BLOCK ── */
+  .ceo-block {
+    background: linear-gradient(135deg, #1a1508 0%, #201b08 100%);
+    border: 1.5px solid var(--ceo);
+    border-radius: 16px;
+    padding: 28px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ceo-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--ceo), transparent);
+  }
+  .ceo-block .tag {
+    display: inline-block;
+    background: rgba(240,196,58,0.15);
+    color: var(--ceo);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+  }
+  .ceo-block h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ceo);
+    margin-bottom: 6px;
+  }
+  .ceo-block p {
+    color: #a89060;
+    font-size: 13px;
+    max-width: 680px;
+  }
+  .ceo-touchpoints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+  .touchpoint {
+    background: rgba(240,196,58,0.08);
+    border: 1px solid rgba(240,196,58,0.2);
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #c8a84a;
+  }
+  .touchpoint strong { color: var(--ceo); }
+
+  /* ── ORCHESTRATOR ── */
+  .orchestrator-block {
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: 14px;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .orch-icon {
+    width: 44px; height: 44px;
+    background: rgba(79,142,247,0.1);
+    border: 1.5px solid rgba(79,142,247,0.25);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .orch-body h3 { font-size: 15px; font-weight: 700; color: var(--accent-blue); margin-bottom: 4px; }
+  .orch-body p { font-size: 12px; color: var(--muted); }
+  .orch-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .pill {
+    background: rgba(79,142,247,0.1);
+    border: 1px solid rgba(79,142,247,0.2);
+    color: #6ea8fa;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── SENTINEL ── */
+  .sentinel-block {
+    background: var(--surface);
+    border: 1.5px dashed rgba(240,106,170,0.4);
+    border-radius: 14px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .sentinel-icon {
+    width: 38px; height: 38px;
+    background: rgba(240,106,170,0.1);
+    border: 1.5px solid rgba(240,106,170,0.25);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .sentinel-body h3 { font-size: 13px; font-weight: 700; color: var(--accent-pink); }
+  .sentinel-body p { font-size: 12px; color: var(--muted); }
+  .sentinel-note {
+    margin-left: auto;
+    font-size: 11px;
+    color: rgba(240,106,170,0.6);
+    font-style: italic;
+    flex-shrink: 0;
+  }
+
+  /* ── CHAMBER CARD ── */
+  .chamber {
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1.5px solid var(--border);
+  }
+  .chamber-header {
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .chamber-num {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+  .chamber-title-block h2 { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+  .chamber-title-block p { font-size: 12px; color: var(--muted); }
+  .chamber-body {
+    padding: 0 20px 20px;
+    background: var(--surface);
+  }
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
+  .agent-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .agent-card .agent-icon { font-size: 22px; margin-bottom: 8px; }
+  .agent-card .agent-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .agent-card .agent-role { font-size: 11px; color: var(--muted); margin-bottom: 8px; font-style: italic; }
+  .agent-card .agent-desc { font-size: 12px; color: #9095a0; line-height: 1.5; }
+
+  /* ── GATE BLOCK ── */
+  .gate-block {
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 0 20px;
+    margin-bottom: 4px;
+  }
+  .gate-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .gate-body h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .gate-body p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .criteria-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+  }
+  .criterion {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── SOFT LAUNCH / SMOKE TEST ── */
+  .interstitial {
+    border-radius: 12px;
+    padding: 18px 24px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    border: 1.5px dashed;
+  }
+  .interstitial-icon {
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .interstitial h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+  .interstitial p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+  .metrics-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .metric-chip {
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .metric-chip .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+
+  /* ── THE LOOP ── */
+  .loop-block {
+    background: var(--surface);
+    border: 1.5px solid var(--border2);
+    border-radius: 14px;
+    padding: 20px 28px;
+  }
+  .loop-block h3 { font-size: 14px; font-weight: 700; color: var(--accent-teal); margin-bottom: 10px; }
+  .loop-routes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .route-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .route-card .route-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .route-card .route-desc { font-size: 12px; color: var(--muted); }
+  .route-card .route-dest {
+    margin-top: 8px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* ── CHAMBER COLORS ── */
+  /* Chamber 1 - Blue */
+  .ch1 .chamber-header { background: linear-gradient(135deg, #0d1420, #111b2e); border-bottom: 1px solid rgba(79,142,247,0.2); }
+  .ch1 .chamber-num { background: rgba(79,142,247,0.15); color: var(--accent-blue); }
+  .ch1 .chamber-title-block h2 { color: var(--accent-blue); }
+  .ch1 { border-color: rgba(79,142,247,0.3); }
+  .ch1 .agent-name { color: #7eb5fa; }
+
+  /* Chamber 2 - Purple */
+  .ch2 .chamber-header { background: linear-gradient(135deg, #130d20, #1a112e); border-bottom: 1px solid rgba(155,110,247,0.2); }
+  .ch2 .chamber-num { background: rgba(155,110,247,0.15); color: var(--accent-purple); }
+  .ch2 .chamber-title-block h2 { color: var(--accent-purple); }
+  .ch2 { border-color: rgba(155,110,247,0.3); }
+  .ch2 .agent-name { color: #b490fa; }
+
+  /* Chamber 3 - Green */
+  .ch3 .chamber-header { background: linear-gradient(135deg, #0a1a14, #0e1f18); border-bottom: 1px solid rgba(63,207,142,0.2); }
+  .ch3 .chamber-num { background: rgba(63,207,142,0.15); color: var(--accent-green); }
+  .ch3 .chamber-title-block h2 { color: var(--accent-green); }
+  .ch3 { border-color: rgba(63,207,142,0.3); }
+  .ch3 .agent-name { color: #5ee8a8; }
+
+  /* ── GATEKEEPER ── */
+  .gate-red { background: rgba(240,90,90,0.06); border: 1px solid rgba(240,90,90,0.15); }
+  .gate-red .gate-icon { background: rgba(240,90,90,0.12); }
+  .gate-red h3 { color: var(--accent-red); }
+  .crit-red { background: rgba(240,90,90,0.1); color: #f07070; border: 1px solid rgba(240,90,90,0.2); }
+
+  /* Smoke test */
+  .smoke { background: rgba(240,168,58,0.05); border-color: rgba(240,168,58,0.35); }
+  .smoke .interstitial-icon { background: rgba(240,168,58,0.1); }
+  .smoke h3 { color: var(--accent-amber); }
+  .smoke-metric { background: rgba(240,168,58,0.1); color: #f0c86a; border: 1px solid rgba(240,168,58,0.2); }
+  .smoke-metric .dot { background: var(--accent-amber); }
+
+  /* Definition of done */
+  .dod { background: rgba(155,110,247,0.05); border: 1px solid rgba(155,110,247,0.2); }
+  .dod .gate-icon { background: rgba(155,110,247,0.1); }
+  .dod h3 { color: var(--accent-purple); }
+  .crit-purple { background: rgba(155,110,247,0.1); color: #c0a0fa; border: 1px solid rgba(155,110,247,0.2); }
+
+  /* Soft launch */
+  .soft { background: rgba(63,207,142,0.05); border-color: rgba(63,207,142,0.35); }
+  .soft .interstitial-icon { background: rgba(63,207,142,0.1); }
+  .soft h3 { color: var(--accent-green); }
+  .soft-metric { background: rgba(63,207,142,0.1); color: #60e0a0; border: 1px solid rgba(63,207,142,0.2); }
+  .soft-metric .dot { background: var(--accent-green); }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    margin-top: 60px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+
+  /* ── DIVIDER LABEL ── */
+  .divider-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 4px 0;
+  }
+  .divider-label span {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="eyebrow">Refined Architecture v2.0</div>
+  <h1>The AI Running Company</h1>
+  <p class="subtitle">A gated, sequential engine for autonomous idea validation, product execution, and market growth — with hard stops between every phase.</p>
+</div>
+
+<div class="wrapper">
+
+  <!-- ══════════════════════ CEO ══════════════════════ -->
+  <div class="ceo-block">
+    <div class="tag">Layer 0</div>
+    <h2>👤 You — The Capital Allocator (CEO)</h2>
+    <p>You sit above the machine. You define the sector. You fund the operation. The system runs autonomously and surfaces only what needs a human decision. You are never in the loop for day-to-day execution.</p>
+    <div class="ceo-touchpoints">
+      <div class="touchpoint"><strong>Touch 1:</strong> Set Observer's target industry</div>
+      <div class="touchpoint"><strong>Touch 2:</strong> Review composite score → Go / Kill</div>
+      <div class="touchpoint"><strong>Touch 3:</strong> Review Soft Launch metrics → Scale / Iterate</div>
+      <div class="touchpoint"><strong>Touch 4:</strong> Receive Competitive Sentinel alerts (real-time)</div>
+      <div class="touchpoint"><strong>Touch 5:</strong> Collect profits & set budget ceiling</div>
+    </div>
+  </div>
+
+  <!-- Sentinel (always-on) -->
+  <div class="sentinel-block">
+    <div class="sentinel-icon">🛰️</div>
+    <div class="sentinel-body">
+      <h3>Competitive Sentinel — Always Running</h3>
+      <p>Lives outside all chambers. Continuously monitors competitor pricing, product launches, and market shifts. Can inject a Priority Alert directly to the CEO at any time if a competitor move materially changes the financial model.</p>
+    </div>
+    <div class="sentinel-note">⚡ Only agent with a direct CEO line</div>
+  </div>
+
+  <div class="connector"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ ORCHESTRATOR ══════════════════════ -->
+  <div class="orchestrator-block">
+    <div class="orch-icon">⚙️</div>
+    <div class="orch-body">
+      <h3>The Orchestrator — Rule Enforcer</h3>
+      <p>Not an agent. The physical environment everything runs inside. Holds the stopwatch and the wallet. Enforces that no chamber starts before the previous one passes its gate.</p>
+      <div class="orch-pills">
+        <span class="pill">cost_tracking</span>
+        <span class="pill">loop_detection</span>
+        <span class="pill">chamber_routing</span>
+        <span class="pill">budget_ceiling</span>
+        <span class="pill">concurrency_manager</span>
+        <span class="pill">re_entry_protocol</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector gate"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ CHAMBER 1 ══════════════════════ -->
+  <div class="chamber ch1">
+    <div class="chamber-header">
+      <div class="chamber-num">1</div>
+      <div class="chamber-title-block">
+        <h2>Chamber 1 — The Truth Seekers</h2>
+        <p>Answers one question only: Is there a real problem with real money behind it?</p>
+      </div>
+    </div>
+    <div class="chamber-body">
+      <div class="agents-grid">
+        <div class="agent-card">
+          <div class="agent-icon">🔭</div>
+          <div class="agent-name">The Observer</div>
+          <div class="agent-role">Problem Discovery</div>
+          <div class="agent-desc">Monitors the target industry. Reads thousands of complaints, reviews, and forum threads. Outputs a structured list of friction points ranked by frequency and severity.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">💡</div>
+          <div class="agent-name">The Inventor</div>
+          <div class="agent-role">Solution Design</div>
+          <div class="agent-desc">Takes the Observer's friction list and designs a solution. Defines what the product must do — value proposition, customer segment, and MVP feature set. Runs with higher temperature for divergent thinking.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">🧮</div>
+          <div class="agent-name">The Accountant</div>
+          <div class="agent-role">Financial Modeler</div>
+          <div class="agent-desc">Runs the hard math. Calculates projected TAM, estimated build cost, projected CAC, and expected margins. All numbers are explicitly marked as projections at this stage.</div>
+        </div>
+      </div>
+
+      <!-- Gatekeeper -->
+      <div style="height:12px;"></div>
+      <div class="gate-block gate-red">
+        <div class="gate-icon">🚫</div>
+        <div class="gate-body">
+          <h3>The Gatekeeper — Composite Score Gate</h3>
+          <p>Does not kill on margin alone. Scores on four weighted dimensions. Project must clear the composite threshold to proceed. If it fails → project is killed or sent back to Observer with a specific pivot instruction.</p>
+          <div class="criteria-list">
+            <span class="criterion crit-red">Margin %</span>
+            <span class="criterion crit-red">TAM Size</span>
+            <span class="criterion crit-red">Time-to-Build Estimate</span>
+            <span class="criterion crit-red">Competitive Density</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector gate"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ CHAMBER 1.5 — SMOKE TEST ══════════════════════ -->
+  <div class="interstitial smoke">
+    <div class="interstitial-icon">🔥</div>
+    <div>
+      <h3>Chamber 1.5 — The Smoke Test (72 hours)</h3>
+      <p>Before a single line of code is written, the Hunter runs a real-world validation. A simple landing page goes live with a small paid ad budget. We measure whether real humans with the real problem actually click "Buy Now." The Accountant updates its CAC estimate with real data. The Gatekeeper re-runs its score with actual numbers before unlocking Chamber 2.</p>
+      <div class="metrics-row">
+        <span class="metric-chip smoke-metric"><span class="dot"></span> Click-through rate threshold</span>
+        <span class="metric-chip smoke-metric"><span class="dot"></span> "Buy Now" conversion rate</span>
+        <span class="metric-chip smoke-metric"><span class="dot"></span> Real CAC data captured</span>
+        <span class="metric-chip smoke-metric"><span class="dot"></span> CEO reviews updated math → Go / Kill</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector gate"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ CHAMBER 2 ══════════════════════ -->
+  <div class="chamber ch2">
+    <div class="chamber-header">
+      <div class="chamber-num">2</div>
+      <div class="chamber-title-block">
+        <h2>Chamber 2 — The Factory</h2>
+        <p>Wakes up only after a proven, profitable blueprint lands in its inbox. Builds the product.</p>
+      </div>
+    </div>
+    <div class="chamber-body">
+      <div class="agents-grid">
+        <div class="agent-card">
+          <div class="agent-icon">📐</div>
+          <div class="agent-name">The Blueprint Maker</div>
+          <div class="agent-role">System Architect</div>
+          <div class="agent-desc">Translates the approved idea into a technical execution plan. Defines database schemas, API routes, and dependency maps so nothing collapses during build.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">⚡</div>
+          <div class="agent-name">The Brains Builder</div>
+          <div class="agent-role">Backend Engineer</div>
+          <div class="agent-desc">Constructs the invisible machinery — core logic, databases, and APIs. Builds only what the Blueprint Maker specified. No scope creep.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">🎨</div>
+          <div class="agent-name">The Face Builder</div>
+          <div class="agent-role">Frontend Engineer</div>
+          <div class="agent-desc">Builds what the customer sees. Buttons, flows, design system, and UI-to-API connections. Smooth interactions, clean design, no dead ends.</div>
+        </div>
+      </div>
+
+      <!-- Inspector / Definition of Done -->
+      <div style="height:12px;"></div>
+      <div class="gate-block dod">
+        <div class="gate-icon">🔍</div>
+        <div class="gate-body">
+          <h3>The Inspector — Definition of Done Gate</h3>
+          <p>"Flawless" is not the standard — <strong>Shippable</strong> is. The Inspector passes the build when all four conditions are met. Any failure sends a specific error report back to the responsible builder for one fix cycle.</p>
+          <div class="criteria-list">
+            <span class="criterion crit-purple">Test coverage ≥ threshold</span>
+            <span class="criterion crit-purple">Zero critical security vulnerabilities</span>
+            <span class="criterion crit-purple">Performance benchmarks met</span>
+            <span class="criterion crit-purple">Zero P0 bugs outstanding</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector gate"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ CHAMBER 2.5 — SOFT LAUNCH ══════════════════════ -->
+  <div class="interstitial soft">
+    <div class="interstitial-icon">🚀</div>
+    <div>
+      <h3>Chamber 2.5 — Soft Launch (2 weeks, 50 users)</h3>
+      <p>Before the Hunter goes wide, the product releases to a controlled cohort. This catches "we built the right thing wrong" before burning the full marketing budget. The Caretaker monitors this cohort in real-time. CEO reviews the cohort metrics and decides: Scale or Iterate.</p>
+      <div class="metrics-row">
+        <span class="metric-chip soft-metric"><span class="dot"></span> Day-7 retention rate</span>
+        <span class="metric-chip soft-metric"><span class="dot"></span> Activation rate</span>
+        <span class="metric-chip soft-metric"><span class="dot"></span> Net Promoter Score</span>
+        <span class="metric-chip soft-metric"><span class="dot"></span> CEO reviews → Full scale / Iterate</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector gate"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ CHAMBER 3 ══════════════════════ -->
+  <div class="chamber ch3">
+    <div class="chamber-header">
+      <div class="chamber-num">3</div>
+      <div class="chamber-title-block">
+        <h2>Chamber 3 — The Market</h2>
+        <p>Full-scale growth begins here. Acquires customers, retains them, and listens hard.</p>
+      </div>
+    </div>
+    <div class="chamber-body">
+      <div class="agents-grid">
+        <div class="agent-card">
+          <div class="agent-icon">🎯</div>
+          <div class="agent-name">The Hunter</div>
+          <div class="agent-role">Growth & Acquisition</div>
+          <div class="agent-desc">Runs at full scale now. Finds people with the exact problem Chamber 1 identified. Builds ICPs, runs outbound campaigns, writes personalized outreach, and books meetings. Also ran the Smoke Test in Chamber 1.5.</div>
+        </div>
+        <div class="agent-card">
+          <div class="agent-icon">🤝</div>
+          <div class="agent-name">The Caretaker</div>
+          <div class="agent-role">Retention & Feedback</div>
+          <div class="agent-desc">Listens after the sale. Handles support issues, resolves billing problems, and — most critically — collects every complaint and feature request into a prioritized, structured change request. Feeds The Loop.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="connector gate"><div class="connector-line"></div><div class="connector-arrow"></div></div>
+
+  <!-- ══════════════════════ THE LOOP ══════════════════════ -->
+  <div class="loop-block">
+    <h3>♻️ The Loop — Caretaker Re-Entry Protocol</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;">Every change request from the Caretaker is classified before it triggers any rebuild. Three explicit re-entry points. No uncontrolled restarts.</p>
+    <div class="loop-routes">
+      <div class="route-card">
+        <div class="route-label" style="color:var(--accent-red);">🔴 Critical Bug</div>
+        <div class="route-desc">Production is broken. Users can't complete core actions. Time-sensitive.</div>
+        <div class="route-dest" style="background:rgba(240,90,90,0.1);color:#f07070;">→ Bypass Chamber 1. Straight to Inspector → Brains/Face Builder.</div>
+      </div>
+      <div class="route-card">
+        <div class="route-label" style="color:var(--accent-amber);">🟡 Feature Improvement</div>
+        <div class="route-desc">Users want something better. Not broken, but room to improve.</div>
+        <div class="route-dest" style="background:rgba(240,168,58,0.1);color:#f0c86a;">→ Lightweight Gatekeeper check → Chamber 2 rebuild cycle.</div>
+      </div>
+      <div class="route-card">
+        <div class="route-label" style="color:var(--accent-blue);">🔵 Strategic Pivot</div>
+        <div class="route-desc">The core assumption was wrong. Users want something fundamentally different.</div>
+        <div class="route-dest" style="background:rgba(79,142,247,0.1);color:#6ea8fa;">→ Full Chamber 1 restart. Observer gets new direction.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="footer">
+  AI Running Company — Refined Architecture v2.0 &nbsp;·&nbsp; Built with sequential gating, real-world validation, and explicit re-entry routing.
+</div>
+
+</body>
+</html>

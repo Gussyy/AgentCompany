@@ -1,0 +1,80 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+compvenv/
+.venv/
+env/
+ENV/
+
+# ── Secrets & API keys — NEVER COMMIT THESE ──────────────────────────────────
+.env
+.env.local
+.env.production
+# allow .env.example (template for other developers)
+!.env.example
+kaggle.json
+*.pem
+*.key
+secrets/
+
+# ── Compiled / cache ──────────────────────────────────────────────────────────
+*.pyc
+*.pyo
+.cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── OS files ──────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── IDE / editor ──────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Kaggle datasets (can be large) ───────────────────────────────────────────
+data/kaggle/
+*.zip
+*.csv
+*.parquet
+*.feather
+
+# ── Agent memory databases (private / large) ─────────────────────────────────
+data/memory/
+
+# ── Runtime logs ─────────────────────────────────────────────────────────────
+logs/
+*.log
+
+# ── Test / debug scripts ─────────────────────────────────────────────────────
+test_*.py
+*_test.py
+debug_*.py
+pip_*.log
+pip_*.txt
+*_install.txt
+*_ok.txt
+*_err.txt
+*_result.txt
+build_guide*.py
+
+# ── Keep these (generated output worth tracking) ─────────────────────────────
+# reports/         ← keep — AgentCompany analysis reports
+# projects/        ← keep — generated product code & specs
+# data/history.json ← keep — run history
+# data/settings.json ← keep — user settings

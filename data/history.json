@@ -1,0 +1,84 @@
+[
+  {
+    "id": 1,
+    "date": "2026-04-14",
+    "time": "18:28",
+    "industry": "productivity tools",
+    "status": "blocked_qa",
+    "passed": false,
+    "product_name": "—",
+    "gate_composite": null,
+    "total_cost_usd": 500.064824,
+    "token_total": 43924,
+    "token_calls": 15,
+    "gross_margin_pct": 75.0,
+    "tam_usd": 5000000000.0,
+    "ad_budget_usd": 500.0,
+    "action_items": [
+      "Review and optimize token usage for VIGIL agent, which incurred the highest compute cost at $0.021412.",
+      "Address the P1 bug identified by VIGIL: missing rate limiting on /api/auth/signup to prevent abuse.",
+      "Monitor marketing ad spend of $500.00, which accounts for 99.99% of total daily expenditure."
+    ]
+  },
+  {
+    "id": 2,
+    "date": "2026-04-14",
+    "time": "18:54",
+    "industry": "productivity tools",
+    "status": "killed_smoke_test",
+    "passed": false,
+    "product_name": "—",
+    "gate_composite": null,
+    "total_cost_usd": 500.02457,
+    "token_total": 18368,
+    "token_calls": 7,
+    "gross_margin_pct": null,
+    "tam_usd": null,
+    "ad_budget_usd": 500.0,
+    "action_items": [
+      "Optimize ad spend: CTR and conversion rates are below target; conduct A/B testing on ad copies to improve performance.",
+      "Review QUANT agent usage: Highest compute cost at $0.009044; investigate for inefficiencies in projection calculations.",
+      "Accelerate product launch: No revenue generated; align marketing and development to reduce time-to-market."
+    ]
+  },
+  {
+    "id": 3,
+    "date": "2026-04-14",
+    "time": "19:16",
+    "industry": "productivity tools",
+    "status": "killed_chamber1",
+    "passed": false,
+    "product_name": "—",
+    "gate_composite": null,
+    "total_cost_usd": 0.018359,
+    "token_total": 14828,
+    "token_calls": 6,
+    "gross_margin_pct": null,
+    "tam_usd": null,
+    "ad_budget_usd": 500.0,
+    "action_items": [
+      "Review QUANT's token usage to identify and reduce unnecessary costs, as it is the most expensive agent."
+    ]
+  },
+  {
+    "id": 4,
+    "date": "2026-04-14",
+    "time": "19:38",
+    "industry": "B2B SaaS developer tools",
+    "status": "complete",
+    "passed": true,
+    "product_name": "—",
+    "gate_composite": null,
+    "total_cost_usd": 500.056063,
+    "token_total": 45504,
+    "token_calls": 19,
+    "gross_margin_pct": 75.0,
+    "tam_usd": 1000000000.0,
+    "ad_budget_usd": 500.0,
+    "action_items": [
+      "Review SENTRY's competitor analysis to adjust market strategy for B2B SaaS developer tools.",
+      "Prioritize addressing HAVEN's user complaints: improve onboarding clarity and add export feature based on feedback.",
+      "Assess ARIA's identified security friction points for potential product enhancements."
+    ]
+  }
+]

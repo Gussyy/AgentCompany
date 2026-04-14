@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>AgentCompany — CEO Dashboard</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+:root{
+  --bg:#090b0f;--surface:#0f1117;--surface2:#161a22;--surface3:#1c2130;
+  --border:#1e2230;--border2:#252d3d;--text:#e2e4ec;--muted:#6b7280;
+  --blue:#4f8ef7;--purple:#9b6ef7;--green:#3fcf8e;--amber:#f0a83a;
+  --red:#f05a5a;--teal:#3fd4cf;--pink:#f06aaa;--gold:#f0c43a;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:13px;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;align-items:center;gap:12px;flex-shrink:0;height:44px;}
+.logo{font-size:14px;font-weight:800;color:var(--gold);letter-spacing:-.3px;white-space:nowrap;}
+.logo span{color:var(--muted);font-weight:400;}
+.status-badge{padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;}
+.status-idle   {background:rgba(107,114,128,.15);color:var(--muted);border:1px solid rgba(107,114,128,.3);}
+.status-running{background:rgba(79,142,247,.15);color:var(--blue);border:1px solid rgba(79,142,247,.3);animation:pulse 2s infinite;}
+.status-complete{background:rgba(63,207,142,.15);color:var(--green);border:1px solid rgba(63,207,142,.3);}
+.status-error  {background:rgba(240,90,90,.15);color:var(--red);border:1px solid rgba(240,90,90,.3);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* NAV TABS */
+.nav-tabs{display:flex;gap:2px;margin-left:16px;}
+.nav-tab{padding:5px 14px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;border:none;background:none;}
+.nav-tab:hover{color:var(--text);background:var(--surface2);}
+.nav-tab.active{color:var(--blue);background:rgba(79,142,247,.12);}
+
+/* top-right controls */
+.topbar-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+.tb-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:5px 11px;border-radius:6px;font-size:11px;cursor:pointer;transition:all .15s;}
+.tb-btn:hover{border-color:var(--blue);color:var(--text);}
+.run-btn{background:var(--blue);color:#fff;border:none;padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;transition:opacity .2s;}
+.run-btn:hover{opacity:.85;}
+.run-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── PAGE CONTAINER ── */
+.page{flex:1;overflow:hidden;display:none;}
+.page.active{display:flex;}
+
+/* ═══════ DASHBOARD TAB ═══════ */
+#page-dashboard{flex-direction:column;}
+.dash-body{flex:1;display:grid;grid-template-columns:220px 1fr 260px;overflow:hidden;}
+
+/* LEFT ROSTER */
+.roster{background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px 0;}
+.roster-section{padding:5px 12px 3px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-top:8px;}
+.agent-row{display:flex;align-items:center;gap:9px;padding:6px 12px;cursor:default;transition:background .15s;}
+.agent-row:hover{background:var(--surface2);}
+.agent-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.dot-idle  {background:var(--muted);}
+.dot-running{background:var(--blue);animation:pulse 1s infinite;}
+.dot-done  {background:var(--green);}
+.dot-error {background:var(--red);}
+.dot-blocked{background:var(--amber);}
+.agent-info .agent-name{font-size:11px;font-weight:600;}
+.agent-info .agent-role{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+/* CENTRE FEED */
+.feed-area{display:flex;flex-direction:column;overflow:hidden;}
+.feed-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.feed-header .clear-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:10px;padding:2px 6px;border-radius:4px;}
+.feed-header .clear-btn:hover{background:var(--border);color:var(--text);}
+.feed{flex:1;overflow-y:auto;padding:10px 14px;display:flex;flex-direction:column;gap:7px;}
+
+/* EVENT CARDS */
+.event-card{border-radius:7px;padding:9px 12px;border:1px solid var(--border);background:var(--surface);}
+.event-card.agent_start {border-left:3px solid var(--blue);}
+.event-card.agent_output{border-left:3px solid var(--green);}
+.event-card.gate_decision.GO  {border-left:3px solid var(--green);background:rgba(63,207,142,.04);}
+.event-card.gate_decision.KILL{border-left:3px solid var(--red);background:rgba(240,90,90,.04);}
+.event-card.gate_decision.PIVOT{border-left:3px solid var(--amber);background:rgba(240,168,58,.04);}
+.event-card.ceo_action{border-left:3px solid var(--gold);background:rgba(240,196,58,.04);}
+.event-card.error{border-left:3px solid var(--red);}
+.event-meta{display:flex;align-items:center;gap:7px;margin-bottom:4px;}
+.event-agent{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;}
+.event-time{font-size:9px;color:var(--muted);margin-left:auto;}
+.event-chamber{font-size:9px;color:var(--muted);}
+.event-msg{font-size:11px;color:#c0c4d0;line-height:1.5;white-space:pre-wrap;max-height:180px;overflow-y:auto;}
+
+/* CEO CHAT INPUT */
+.chat-bar{border-top:1px solid var(--border);padding:10px 14px;background:var(--surface);display:flex;gap:8px;flex-shrink:0;}
+.chat-input{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:12px;font-family:inherit;resize:none;height:36px;transition:border-color .15s;}
+.chat-input:focus{outline:none;border-color:var(--blue);}
+.chat-send{background:var(--blue);color:#fff;border:none;padding:0 16px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer;flex-shrink:0;}
+.chat-send:disabled{opacity:.4;cursor:not-allowed;}
+.chat-hint{font-size:9px;color:var(--muted);margin-top:4px;}
+
+/* RIGHT CEO PANEL */
+.ceo-panel{background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.panel-section{border-bottom:1px solid var(--border);padding:10px 12px;flex-shrink:0;}
+.panel-title{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.kpi-card{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:7px 9px;}
+.kpi-label{font-size:9px;color:var(--muted);}
+.kpi-value{font-size:15px;font-weight:700;margin-top:2px;}
+.kpi-value.green{color:var(--green)}.kpi-value.amber{color:var(--amber)}.kpi-value.red{color:var(--red)}
+.chamber-list{display:flex;flex-direction:column;gap:4px;}
+.chamber-item{display:flex;align-items:center;gap:7px;font-size:11px;}
+.ch-dot{width:9px;height:9px;border-radius:50%;}
+.ch-dot.pending{background:var(--border)}.ch-dot.active{background:var(--blue);animation:pulse 1s infinite}
+.ch-dot.passed{background:var(--green)}.ch-dot.failed{background:var(--red)}
+.gate-results{display:flex;flex-direction:column;gap:4px;}
+.gate-result{display:flex;align-items:center;gap:7px;font-size:11px;padding:4px 7px;border-radius:5px;}
+.gate-result.GO  {background:rgba(63,207,142,.1);color:var(--green);}
+.gate-result.KILL{background:rgba(240,90,90,.1);color:var(--red);}
+.gate-result.PIVOT{background:rgba(240,168,58,.1);color:var(--amber);}
+.action-list{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;}
+.action-item{background:rgba(240,196,58,.07);border:1px solid rgba(240,196,58,.2);border-radius:5px;padding:7px 9px;font-size:11px;color:#d4b840;}
+.no-actions{color:var(--muted);font-size:11px;font-style:italic;}
+
+/* ═══════ HISTORY TAB ═══════ */
+#page-history{flex-direction:column;overflow:hidden;}
+.page-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.page-header h2{font-size:15px;font-weight:700;}
+.history-grid{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:8px;}
+.run-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;cursor:pointer;transition:border-color .15s;}
+.run-card:hover{border-color:var(--border2);}
+.run-card.passed{border-left:3px solid var(--green);}
+.run-card.killed{border-left:3px solid var(--red);}
+.run-badge{padding:2px 9px;border-radius:12px;font-size:10px;font-weight:700;text-transform:uppercase;}
+.badge-pass{background:rgba(63,207,142,.15);color:var(--green);}
+.badge-kill{background:rgba(240,90,90,.15);color:var(--red);}
+.run-industry{font-size:13px;font-weight:600;}
+.run-product{font-size:11px;color:var(--muted);margin-top:2px;}
+.run-meta{display:flex;gap:12px;margin-top:4px;}
+.run-meta span{font-size:10px;color:var(--muted);}
+.run-right{text-align:right;}
+.run-cost{font-size:14px;font-weight:700;color:var(--amber);}
+.run-date{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* run detail drawer */
+.run-detail{display:none;margin-top:6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:12px 14px;font-size:11px;color:#c0c4d0;line-height:1.7;}
+.run-detail.open{display:block;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+.detail-stat{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:8px 10px;}
+.detail-stat .ds-label{font-size:9px;color:var(--muted);}
+.detail-stat .ds-val{font-size:14px;font-weight:700;margin-top:2px;}
+
+/* ═══════ ANALYTICS TAB ═══════ */
+#page-analytics{flex-direction:column;overflow:hidden;}
+.analytics-body{flex:1;overflow-y:auto;padding:20px;}
+.analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.stat-card .stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;}
+.stat-card .stat-val{font-size:28px;font-weight:800;margin-top:4px;}
+.stat-card .stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
+.chart-card h3{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;}
+.bar-list{display:flex;flex-direction:column;gap:7px;}
+.bar-item{display:flex;align-items:center;gap:8px;font-size:11px;}
+.bar-label{width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#c0c4d0;}
+.bar-track{flex:1;background:var(--surface2);border-radius:4px;height:8px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;background:var(--blue);transition:width .4s;}
+.bar-count{width:24px;text-align:right;color:var(--muted);font-size:10px;}
+.donut-wrap{display:flex;align-items:center;gap:16px;}
+.donut-legend{display:flex;flex-direction:column;gap:5px;}
+.dl-item{display:flex;align-items:center;gap:6px;font-size:11px;}
+.dl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+/* ═══════ SETTINGS TAB ═══════ */
+#page-settings{flex-direction:column;overflow:hidden;}
+.settings-body{flex:1;overflow-y:auto;padding:20px;}
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:860px;}
+.settings-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;}
+.settings-card h3{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:14px;}
+.field-group{display:flex;flex-direction:column;gap:10px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:11px;color:#c0c4d0;font-weight:500;}
+.field input,.field select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:12px;font-family:inherit;transition:border-color .15s;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--blue);}
+.field .hint{font-size:10px;color:var(--muted);}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.save-btn{margin-top:14px;background:var(--blue);color:#fff;border:none;padding:8px 20px;border-radius:6px;font-weight:700;font-size:12px;cursor:pointer;}
+.save-btn:hover{opacity:.85;}
+.save-toast{display:none;font-size:11px;color:var(--green);margin-left:10px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;}
+.toggle{position:relative;width:36px;height:20px;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:10px;cursor:pointer;transition:.2s;}
+.toggle input:checked+.toggle-slider{background:var(--blue);}
+.toggle-slider:before{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked+.toggle-slider:before{transform:translateX(16px);}
+.agent-model-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.agent-model-item{display:flex;align-items:center;justify-content:space-between;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:5px 8px;}
+.agent-model-item .am-name{font-size:11px;font-weight:600;}
+.agent-model-item select{background:var(--bg);border:none;color:var(--muted);font-size:10px;padding:2px 4px;cursor:pointer;}
+
+/* Kaggle step badges */
+.kaggle-step{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--muted);transition:all .3s;}
+.kaggle-step.active{background:rgba(79,142,247,.15);border-color:var(--blue);color:var(--blue);}
+.kaggle-step.done  {background:rgba(63,207,142,.15);border-color:var(--green);color:var(--green);}
+.kaggle-step.error {background:rgba(240,90,90,.15);border-color:var(--red);color:var(--red);}
+
+/* scrollbar */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ═══════ TOP BAR ═══════ -->
+<div class="topbar">
+  <div class="logo">🏢 AgentCompany <span>/ CEO</span></div>
+  <div class="status-badge status-idle" id="statusBadge">Idle</div>
+  <nav class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">📊 Dashboard</button>
+    <button class="nav-tab" onclick="showPage('history')">📋 History</button>
+    <button class="nav-tab" onclick="showPage('analytics')">📈 Analytics</button>
+    <button class="nav-tab" onclick="showPage('settings')">⚙️ Settings</button>
+    <button class="nav-tab" onclick="showPage('memory')">🧠 Memory</button>
+    <button class="nav-tab" onclick="showPage('kaggle')">🏆 Kaggle</button>
+  </nav>
+  <div class="topbar-right">
+    <input id="industryInput" type="text" placeholder="Industry (e.g. digital health)"
+      style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;width:200px;font-family:inherit;"
+      value="digital health"/>
+    <button class="run-btn" id="runBtn" onclick="startRun()">▶ Run Company</button>
+  </div>
+</div>
+
+<!-- ═══════ DASHBOARD PAGE ═══════ -->
+<div class="page active" id="page-dashboard">
+  <div class="dash-body">
+
+    <!-- LEFT: AGENT ROSTER -->
+    <div class="roster">
+      <div class="roster-section">Always On</div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-SENTRY"></div><div class="agent-info"><div class="agent-name">SENTRY</div><div class="agent-role">Competitive Intel</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-LEDGER"></div><div class="agent-info"><div class="agent-name">LEDGER</div><div class="agent-role">CFO</div></div></div>
+      <div class="roster-section">Chamber 1</div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-ARIA"></div><div class="agent-info"><div class="agent-name">ARIA</div><div class="agent-role">Market Research</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-NOVA"></div><div class="agent-info"><div class="agent-name">NOVA</div><div class="agent-role">Product Strategy</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-QUANT"></div><div class="agent-info"><div class="agent-name">QUANT</div><div class="agent-role">Financial Intel</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-GATE"></div><div class="agent-info"><div class="agent-name">GATE</div><div class="agent-role">Chief Risk Officer</div></div></div>
+      <div class="roster-section">Chamber 1.5 – Smoke Test</div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-APEX-smoke"></div><div class="agent-info"><div class="agent-name">APEX</div><div class="agent-role">72-hr Smoke Test</div></div></div>
+      <div class="roster-section">Chamber 2</div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-ARCH"></div><div class="agent-info"><div class="agent-name">ARCH</div><div class="agent-role">Systems Architect</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-CORE"></div><div class="agent-info"><div class="agent-name">CORE</div><div class="agent-role">Backend Engineer</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-PIXEL"></div><div class="agent-info"><div class="agent-name">PIXEL</div><div class="agent-role">Frontend Engineer</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-VIGIL"></div><div class="agent-info"><div class="agent-name">VIGIL</div><div class="agent-role">QA & Security</div></div></div>
+      <div class="roster-section">Chamber 3</div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-APEX"></div><div class="agent-info"><div class="agent-name">APEX</div><div class="agent-role">Growth & Acquisition</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-HAVEN"></div><div class="agent-info"><div class="agent-name">HAVEN</div><div class="agent-role">Customer Success</div></div></div>
+      <div class="agent-row"><div class="agent-dot dot-idle" id="dot-ORCA-1"></div><div class="agent-info"><div class="agent-name">ORCA-1</div><div class="agent-role">Infrastructure</div></div></div>
+    </div>
+
+    <!-- CENTRE: FEED + CEO CHAT -->
+    <div class="feed-area">
+      <div class="feed-header">
+        Live Activity Feed
+        <button class="clear-btn" onclick="clearFeed()">Clear</button>
+      </div>
+      <div class="feed" id="feed">
+        <div style="color:var(--muted);font-size:13px;margin:auto;text-align:center;padding:40px 20px;">
+          Type a command below or pick an industry above and click <strong style="color:var(--text)">▶ Run Company</strong>
+        </div>
+      </div>
+      <!-- CEO CHAT BAR -->
+      <div class="chat-bar">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+          <textarea class="chat-input" id="chatInput" rows="1"
+            placeholder="Ask your company anything… e.g. 'Run an analysis on B2B logistics' or '@ARIA find the best niche in fintech'"
+            onkeydown="chatKeydown(event)"></textarea>
+          <div class="chat-hint">▶ Run Company for a full pipeline · @AGENT message to talk to a specific agent · Ask anything to start a targeted run</div>
+        </div>
+        <button class="chat-send" id="chatSend" onclick="sendChat()">Send</button>
+      </div>
+    </div>
+
+    <!-- RIGHT: CEO PANEL -->
+    <div class="ceo-panel">
+      <div class="panel-section">
+        <div class="panel-title">Financial Snapshot</div>
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-label">Today's Spend</div><div class="kpi-value amber" id="kpi-spend">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Revenue</div><div class="kpi-value green" id="kpi-revenue">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Real CAC</div><div class="kpi-value" id="kpi-cac">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Gross Margin</div><div class="kpi-value" id="kpi-margin">—</div></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">Chamber Progress</div>
+        <div class="chamber-list">
+          <div class="chamber-item"><div class="ch-dot pending" id="ch1-dot"></div><span>Chamber 1 – Truth Seekers</span></div>
+          <div class="chamber-item"><div class="ch-dot pending" id="ch15-dot"></div><span>Chamber 1.5 – Smoke Test</span></div>
+          <div class="chamber-item"><div class="ch-dot pending" id="ch2-dot"></div><span>Chamber 2 – Factory</span></div>
+          <div class="chamber-item"><div class="ch-dot pending" id="ch25-dot"></div><span>Chamber 2.5 – Soft Launch</span></div>
+          <div class="chamber-item"><div class="ch-dot pending" id="ch3-dot"></div><span>Chamber 3 – Market</span></div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <div class="panel-title">Gate Decisions</div>
+        <div class="gate-results" id="gateResults">
+          <div style="color:var(--muted);font-size:10px;font-style:italic;">Awaiting evaluations…</div>
+        </div>
+      </div>
+      <div class="panel-title" style="padding:10px 12px 0;">Action Items</div>
+      <div class="action-list" id="actionList">
+        <div class="no-actions">No action items yet.</div>
+      </div>
+    </div>
+
+  </div><!-- /dash-body -->
+</div><!-- /page-dashboard -->
+
+<!-- ═══════ HISTORY PAGE ═══════ -->
+<div class="page" id="page-history">
+  <div class="page-header">
+    <h2>Run History</h2>
+    <button class="tb-btn" onclick="loadHistory()">↻ Refresh</button>
+  </div>
+  <div class="history-grid" id="historyGrid">
+    <div style="color:var(--muted);font-size:13px;text-align:center;padding:40px;">Loading history…</div>
+  </div>
+</div>
+
+<!-- ═══════ ANALYTICS PAGE ═══════ -->
+<div class="page" id="page-analytics">
+  <div class="page-header">
+    <h2>Company Analytics</h2>
+    <button class="tb-btn" onclick="loadAnalytics()">↻ Refresh</button>
+  </div>
+  <div class="analytics-body" id="analyticsBody">
+    <div style="color:var(--muted);text-align:center;padding:40px;">Loading analytics…</div>
+  </div>
+</div>
+
+<!-- ═══════ MEMORY PAGE ═══════ -->
+<div class="page" id="page-memory">
+  <div class="page-header">
+    <div>
+      <h2>🧠 Agent Long-Term Memory</h2>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">Each agent builds their own knowledge graph from past runs. Used automatically before each analysis.</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="tb-btn" onclick="loadMemory()">↻ Refresh</button>
+    </div>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:240px 1fr;overflow:hidden;">
+
+    <!-- Agent list sidebar -->
+    <div style="background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:10px 0;" id="memAgentList">
+      <div style="padding:8px 14px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Select Agent</div>
+    </div>
+
+    <!-- Graph viewer -->
+    <div style="display:flex;flex-direction:column;overflow:hidden;">
+      <!-- Stats bar -->
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:12px;flex-shrink:0;" id="memStatsBar">
+        <div style="color:var(--muted);font-size:12px;font-style:italic;">Select an agent to view their memory graph</div>
+      </div>
+
+      <!-- Graph tabs: Nodes / Edges / Raw -->
+      <div style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;" id="memGraphTabs" style="display:none;">
+        <button onclick="showMemTab('nodes')" id="memTabNodes" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid var(--blue);color:var(--blue);font-size:12px;font-weight:600;cursor:pointer;">Nodes</button>
+        <button onclick="showMemTab('edges')" id="memTabEdges" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:12px;cursor:pointer;">Edges</button>
+        <button onclick="showMemTab('visual')" id="memTabVisual" style="padding:7px 16px;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-size:12px;cursor:pointer;">Graph View</button>
+        <div style="margin-left:auto;display:flex;align-items:center;padding-right:12px;gap:8px;">
+          <button onclick="clearAgentMemory()" style="background:none;border:1px solid var(--red);color:var(--red);padding:3px 10px;border-radius:5px;font-size:10px;cursor:pointer;">Clear Memory</button>
+        </div>
+      </div>
+
+      <!-- Content area -->
+      <div style="flex:1;overflow-y:auto;padding:14px 16px;" id="memContent">
+        <div style="color:var(--muted);text-align:center;padding:60px 0;font-style:italic;">Select an agent from the left to explore their knowledge graph</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ KAGGLE PAGE ═══════ -->
+<div class="page" id="page-kaggle">
+  <div class="page-header">
+    <div>
+      <h2>🏆 Kaggle DataScience Chamber</h2>
+      <div style="font-size:11px;color:var(--muted);margin-top:2px;">SCOUT → DARWIN → FORGE → OPTIMUS → HELM · Aiming for top 10%</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="kaggleSlug" type="text" placeholder="competition slug (leave empty = auto)" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 10px;border-radius:6px;font-size:12px;width:240px;font-family:inherit;"/>
+      <button class="run-btn" id="kaggleRunBtn" onclick="startKaggle()">🏆 Run Kaggle</button>
+    </div>
+  </div>
+  <div style="flex:1;display:grid;grid-template-columns:1fr 320px;overflow:hidden;">
+
+    <!-- Left: live feed + results -->
+    <div style="display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border);">
+      <!-- Pipeline progress -->
+      <div style="padding:12px 16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;">Pipeline Progress</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <div class="kaggle-step" id="kstep-scout">🔭 SCOUT</div>
+          <div style="color:var(--muted);align-self:center;">→</div>
+          <div class="kaggle-step" id="kstep-darwin">🔬 DARWIN</div>
+          <div style="color:var(--muted);align-self:center;">→</div>
+          <div class="kaggle-step" id="kstep-forge">⚙️ FORGE</div>
+          <div style="color:var(--muted);align-self:center;">→</div>
+          <div class="kaggle-step" id="kstep-optimus">🔧 OPTIMUS</div>
+          <div style="color:var(--muted);align-self:center;">→</div>
+          <div class="kaggle-step" id="kstep-helm">🚀 HELM</div>
+        </div>
+      </div>
+      <!-- Log feed -->
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 14px 4px;flex-shrink:0;">Live Log</div>
+      <div id="kaggleFeed" style="flex:1;overflow-y:auto;padding:8px 14px;display:flex;flex-direction:column;gap:4px;">
+        <div style="color:var(--muted);font-style:italic;font-size:12px;">Enter a competition slug above (e.g. <strong style="color:var(--text);">titanic</strong>) and click Run Kaggle.</div>
+      </div>
+    </div>
+
+    <!-- Right: scores + result panel -->
+    <div style="display:flex;flex-direction:column;overflow-y:auto;padding:14px;">
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;">Scores</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
+        <div class="kpi-card"><div class="kpi-label">Baseline CV</div><div class="kpi-value amber" id="kpi-cv1">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Optimized CV</div><div class="kpi-value green" id="kpi-cv2">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Est. LB Score</div><div class="kpi-value" id="kpi-lb">—</div></div>
+        <div class="kpi-card"><div class="kpi-label">Est. Rank</div><div class="kpi-value" id="kpi-rank">—</div></div>
+      </div>
+      <div id="kaggleResult" style="font-size:11px;line-height:1.7;color:#c0c4d0;"></div>
+
+      <div style="font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:14px 0 8px;">Past Competitions</div>
+      <div id="kaggleHistory" style="display:flex;flex-direction:column;gap:5px;font-size:11px;">
+        <div style="color:var(--muted);font-style:italic;">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ SETTINGS PAGE ═══════ -->
+<div class="page" id="page-settings">
+  <div class="page-header">
+    <h2>Settings</h2>
+    <span style="font-size:11px;color:var(--muted);">Changes take effect on the next run</span>
+  </div>
+  <div class="settings-body">
+    <div class="settings-grid">
+
+      <!-- Run Parameters -->
+      <div class="settings-card">
+        <h3>Run Parameters</h3>
+        <div class="field-group">
+          <div class="field">
+            <label>Default Industry</label>
+            <input type="text" id="s-industry" placeholder="e.g. productivity tools"/>
+            <span class="hint">Pre-fills the industry input on the dashboard</span>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>GATE Threshold</label>
+              <input type="number" id="s-gate" min="1" max="10" step="0.1" placeholder="6.0"/>
+              <span class="hint">Minimum score (1–10) to pass</span>
+            </div>
+            <div class="field">
+              <label>Default Ad Budget ($)</label>
+              <input type="number" id="s-adbudget" min="0" step="50" placeholder="500"/>
+            </div>
+          </div>
+          <div class="field">
+            <label>Daily Budget Ceiling ($)</label>
+            <input type="number" id="s-dailybudget" min="0" step="100" placeholder="1000"/>
+            <span class="hint">Yellow alert at 80%, red alert at 100%</span>
+          </div>
+        </div>
+        <button class="save-btn" onclick="saveSettings()">Save Changes</button>
+        <span class="save-toast" id="saveToast">✓ Saved!</span>
+      </div>
+
+      <!-- Company Identity -->
+      <div class="settings-card">
+        <h3>Company Identity</h3>
+        <div class="field-group">
+          <div class="field">
+            <label>CEO Name</label>
+            <input type="text" id="s-ceoname" placeholder="Your name"/>
+          </div>
+          <div class="field">
+            <div class="toggle-row">
+              <div>
+                <div style="font-size:11px;color:#c0c4d0;font-weight:500;">Notion Logging</div>
+                <div style="font-size:10px;color:var(--muted);">Auto-post reports to Notion after each run</div>
+              </div>
+              <label class="toggle"><input type="checkbox" id="s-notion" checked/><div class="toggle-slider"></div></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent Models -->
+      <div class="settings-card" style="grid-column:1/-1;">
+        <h3>Agent Models</h3>
+        <div class="agent-model-grid" id="agentModelGrid">
+          <!-- filled by JS -->
+        </div>
+        <button class="save-btn" onclick="saveSettings()">Save Agent Models</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let evtSource = null;
+let currentSettings = {};
+
+const agentColours = {
+  ARIA:'#4f8ef7', NOVA:'#f0c43a', QUANT:'#3fcf8e', GATE:'#f05a5a',
+  ARCH:'#6080fa', CORE:'#4fa8f7', PIXEL:'#c060f7', VIGIL:'#f07070',
+  APEX:'#3fd4a0', HAVEN:'#3fd4cf', SENTRY:'#f06aaa', LEDGER:'#f0a83a',
+  'ORCA-1':'#e2e4ec',
+};
+
+// ── Tab navigation ────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  event.target.classList.add('active');
+  if (name === 'history')   loadHistory();
+  if (name === 'analytics') loadAnalytics();
+  if (name === 'settings')  loadSettings();
+  if (name === 'memory')    loadMemory();
+  if (name === 'kaggle')    loadKaggleHistory();
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function fmt(iso) { return new Date(iso).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
+function setDot(name, cls) { const d=document.getElementById('dot-'+name); if(d) d.className='agent-dot '+cls; }
+function setStatus(s) {
+  const b=document.getElementById('statusBadge');
+  b.className='status-badge status-'+(s==='complete'?'complete':s==='running'?'running':(s.includes('kill')||s==='error'?'error':'idle'));
+  b.textContent=s.replace(/_/g,' ').toUpperCase();
+}
+function setChDot(id, cls) { const d=document.getElementById(id); if(d) d.className='ch-dot '+cls; }
+function updateKpi(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+
+// ── Feed ──────────────────────────────────────────────────────────────────────
+function addFeedCard(evt) {
+  const feed = document.getElementById('feed');
+  feed.querySelector('div[style]')?.remove();
+  const verdict = evt.data?.verdict || '';
+  const card = document.createElement('div');
+  card.className = `event-card ${evt.event_type} ${verdict}`;
+  const col = agentColours[evt.agent_name] || '#e2e4ec';
+  const msg = String(evt.message || '');
+  const truncated = msg.length > 600 ? msg.slice(0,600)+'…' : msg;
+  card.innerHTML = `
+    <div class="event-meta">
+      <span class="event-agent" style="color:${col}">${esc(evt.agent_name)}</span>
+      <span class="event-chamber">${esc(evt.chamber||'')}</span>
+      <span class="event-time">${fmt(evt.timestamp)}</span>
+    </div>
+    <div class="event-msg">${esc(truncated)}</div>`;
+  feed.appendChild(card);
+  feed.scrollTop = feed.scrollHeight;
+  setDot(evt.agent_name, evt.status==='running'?'dot-running':evt.status==='done'?'dot-done':evt.status==='error'?'dot-error':'dot-idle');
+  if (evt.event_type==='gate_decision') addGateResult(evt.data?.stage||'gate', verdict);
+  if (evt.event_type==='ceo_action') addActionItem(evt.message);
+  if (evt.data?.real_cac_usd)       updateKpi('kpi-cac','$'+evt.data.real_cac_usd.toFixed(2));
+  if (evt.data?.gross_margin_pct)   updateKpi('kpi-margin',evt.data.gross_margin_pct.toFixed(1)+'%');
+}
+
+function addGateResult(stage, verdict) {
+  const c=document.getElementById('gateResults');
+  c.querySelector('div[style]')?.remove();
+  const d=document.createElement('div');
+  d.className=`gate-result ${verdict}`;
+  const icon=verdict==='GO'?'✅':verdict==='KILL'?'❌':'⚠️';
+  d.textContent=`${icon} ${stage.replace(/_/g,' ')}: ${verdict}`;
+  c.appendChild(d);
+}
+
+function addActionItem(text) {
+  const list=document.getElementById('actionList');
+  list.querySelector('.no-actions')?.remove();
+  const item=document.createElement('div');
+  item.className='action-item';
+  item.textContent='⚡ '+text;
+  list.appendChild(item);
+}
+
+function clearFeed() { document.getElementById('feed').innerHTML=''; }
+</script>
+
+<script>
+// ── Run Company ───────────────────────────────────────────────────────────────
+function resetUI() {
+  document.querySelectorAll('.agent-dot').forEach(d=>d.className='agent-dot dot-idle');
+  ['ch1-dot','ch15-dot','ch2-dot','ch25-dot','ch3-dot'].forEach(id=>setChDot(id,'pending'));
+  document.getElementById('gateResults').innerHTML='<div style="color:var(--muted);font-size:10px;font-style:italic;">Awaiting evaluations…</div>';
+  document.getElementById('actionList').innerHTML='<div class="no-actions">No action items yet.</div>';
+  ['kpi-spend','kpi-revenue','kpi-cac','kpi-margin'].forEach(id=>updateKpi(id,'—'));
+}
+
+function setBusy(busy) {
+  const btn=document.getElementById('runBtn');
+  const send=document.getElementById('chatSend');
+  btn.disabled=busy; btn.textContent=busy?'⏳ Running…':'▶ Run Company';
+  if(send) send.disabled=busy;
+}
+
+function startRun() {
+  const industry=document.getElementById('industryInput').value.trim();
+  if(!industry) return;
+  resetUI(); clearFeed(); setStatus('running'); setBusy(true);
+  connectSSE();
+  fetch('/run',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({industry,ad_budget_usd:currentSettings.default_ad_budget_usd||500})})
+    .catch(()=>{setStatus('error');setBusy(false);});
+  pollStatus();
+}
+
+function sendChat() {
+  const msg=document.getElementById('chatInput').value.trim();
+  if(!msg) return;
+  document.getElementById('chatInput').value='';
+
+  // Show CEO message in feed
+  const feed=document.getElementById('feed');
+  feed.querySelector('div[style]')?.remove();
+  const you=document.createElement('div');
+  you.className='event-card ceo_action';
+  you.innerHTML=`<div class="event-meta"><span class="event-agent" style="color:var(--gold)">YOU (CEO)</span><span class="event-time">${new Date().toLocaleTimeString()}</span></div><div class="event-msg">${esc(msg)}</div>`;
+  feed.appendChild(you); feed.scrollTop=feed.scrollHeight;
+
+  resetUI(); setStatus('running'); setBusy(true);
+  connectSSE();
+  fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({message:msg,ad_budget_usd:currentSettings.default_ad_budget_usd||500})})
+    .catch(()=>{setStatus('error');setBusy(false);});
+  pollStatus();
+}
+
+function chatKeydown(e) {
+  if(e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function connectSSE() {
+  if(evtSource) { evtSource.close(); evtSource=null; }
+  evtSource=new EventSource('/events');
+  evtSource.onmessage=(e)=>{
+    const evt=JSON.parse(e.data);
+    if(evt.event_type==='heartbeat') return;
+    addFeedCard(evt);
+    handleKaggleEvent(evt);
+    const chMap={'chamber1':1,'chamber2':2,'chamber3':3};
+    const cn=chMap[evt.chamber];
+    if(cn){
+      if(evt.status==='running') setChDot('ch'+cn+'-dot','active');
+      if(evt.status==='done')    setChDot('ch'+cn+'-dot','passed');
+      if(evt.status==='error')   setChDot('ch'+cn+'-dot','failed');
+    }
+  };
+}
+
+function pollStatus() {
+  const iv=setInterval(async()=>{
+    const r=await fetch('/status');
+    const d=await r.json();
+    setStatus(d.status);
+    if(d.status!=='running'&&d.status!=='idle'){
+      clearInterval(iv);
+      setBusy(false);
+      if(evtSource){evtSource.close();evtSource=null;}
+      const res=d.result;
+      if(res?.daily_report){
+        const dr=res.daily_report;
+        updateKpi('kpi-spend','$'+(dr.total_spend_usd||0).toFixed(3));
+        updateKpi('kpi-revenue','$'+(dr.revenue_usd||0).toFixed(2));
+        (dr.action_items||[]).forEach(addActionItem);
+      }
+      if(res?.financial_model){
+        const fm=res.financial_model;
+        if(fm.real_cac_usd) updateKpi('kpi-cac','$'+fm.real_cac_usd.toFixed(2));
+        if(fm.gross_margin_pct) updateKpi('kpi-margin',fm.gross_margin_pct.toFixed(1)+'%');
+      }
+      if(d.status==='complete')
+        ['ch1-dot','ch15-dot','ch2-dot','ch25-dot','ch3-dot'].forEach(id=>setChDot(id,'passed'));
+    }
+  },3000);
+}
+</script>
+
+<script>
+// ── HISTORY TAB ───────────────────────────────────────────────────────────────
+async function loadHistory() {
+  const grid = document.getElementById('historyGrid');
+  grid.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;">Loading…</div>';
+  try {
+    const data = await fetch('/history').then(r=>r.json());
+    const runs = data.runs || [];
+    if (!runs.length) {
+      grid.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;">No runs yet. Start a run from the Dashboard tab.</div>';
+      return;
+    }
+    grid.innerHTML = runs.map((r,i) => `
+      <div class="run-card ${r.passed?'passed':'killed'}" onclick="toggleDetail('rd-${i}')">
+        <div>
+          <div class="run-badge ${r.passed?'badge-pass':'badge-kill'}">${r.passed?'PASSED':'KILLED'}</div>
+        </div>
+        <div>
+          <div class="run-industry">${esc(r.industry||'Unknown')}</div>
+          <div class="run-product">${r.product_name&&r.product_name!=='—'?esc(r.product_name):'No product built'}</div>
+          <div class="run-meta">
+            <span>GATE: ${r.gate_composite!=null?r.gate_composite.toFixed(1)+'/10':'—'}</span>
+            <span>Tokens: ${r.token_total?r.token_total.toLocaleString():'—'}</span>
+            <span>Calls: ${r.token_calls||'—'}</span>
+          </div>
+          <div class="run-detail" id="rd-${i}">
+            <div class="detail-grid">
+              <div class="detail-stat"><div class="ds-label">API Cost</div><div class="ds-val" style="color:var(--amber)">$${(r.total_cost_usd||0).toFixed(4)}</div></div>
+              <div class="detail-stat"><div class="ds-label">TAM</div><div class="ds-val">${r.tam_usd?'$'+Number(r.tam_usd).toLocaleString():'—'}</div></div>
+              <div class="detail-stat"><div class="ds-label">Gross Margin</div><div class="ds-val" style="color:var(--green)">${r.gross_margin_pct!=null?r.gross_margin_pct.toFixed(1)+'%':'—'}</div></div>
+            </div>
+            ${r.action_items&&r.action_items.length?'<div style="font-size:10px;color:var(--muted);margin-bottom:5px;">CEO Action Items</div>'+r.action_items.map(a=>`<div style="color:#d4b840;margin-bottom:3px;">⚡ ${esc(a)}</div>`).join(''):''}
+          </div>
+        </div>
+        <div class="run-right">
+          <div class="run-cost">$${(r.total_cost_usd||0).toFixed(4)}</div>
+          <div class="run-date">${r.date||''} ${r.time||''}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--red);text-align:center;padding:40px;">Failed to load history: ${esc(String(e))}</div>`;
+  }
+}
+
+function toggleDetail(id) {
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
+
+// ── ANALYTICS TAB ─────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const body = document.getElementById('analyticsBody');
+  body.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;">Loading…</div>';
+  try {
+    const d = await fetch('/analytics').then(r=>r.json());
+    if (!d.total_runs) {
+      body.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;">No analytics yet — run the company first.</div>';
+      return;
+    }
+    const passColor = d.pass_rate>=60?'var(--green)':d.pass_rate>=30?'var(--amber)':'var(--red)';
+    const maxCount = Math.max(...(d.industries||[]).map(i=>i.count),1);
+    body.innerHTML = `
+      <div class="analytics-grid">
+        <div class="stat-card"><div class="stat-label">Total Runs</div><div class="stat-val" style="color:var(--blue)">${d.total_runs}</div><div class="stat-sub">all time</div></div>
+        <div class="stat-card"><div class="stat-label">Pass Rate</div><div class="stat-val" style="color:${passColor}">${d.pass_rate}%</div><div class="stat-sub">${d.passed} passed · ${d.killed} killed</div></div>
+        <div class="stat-card"><div class="stat-label">Total Spent</div><div class="stat-val" style="color:var(--amber)">$${d.total_cost.toFixed(4)}</div><div class="stat-sub">all DeepSeek API calls</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Cost/Run</div><div class="stat-val" style="color:var(--gold)">$${d.avg_cost_per_run.toFixed(4)}</div><div class="stat-sub">per company run</div></div>
+      </div>
+      <div class="chart-row">
+        <div class="chart-card">
+          <h3>Industries Tried</h3>
+          <div class="bar-list">
+            ${(d.industries||[]).map(i=>`
+              <div class="bar-item">
+                <div class="bar-label">${esc(i.industry)}</div>
+                <div class="bar-track"><div class="bar-fill" style="width:${Math.round(i.count/maxCount*100)}%"></div></div>
+                <div class="bar-count">${i.count}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+        <div class="chart-card">
+          <h3>Pass / Kill Breakdown</h3>
+          <div class="donut-wrap">
+            <svg viewBox="0 0 80 80" width="100" height="100">
+              ${donutPaths(d.passed, d.killed)}
+            </svg>
+            <div class="donut-legend">
+              <div class="dl-item"><div class="dl-dot" style="background:var(--green)"></div>${d.passed} Passed (${d.pass_rate}%)</div>
+              <div class="dl-item"><div class="dl-dot" style="background:var(--red)"></div>${d.killed} Killed (${(100-d.pass_rate).toFixed(1)}%)</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  } catch(e) {
+    body.innerHTML = `<div style="color:var(--red);text-align:center;padding:40px;">Failed to load analytics.</div>`;
+  }
+}
+
+function donutPaths(passed, killed) {
+  const total = passed + killed;
+  if (!total) return '';
+  const r = 30, cx = 40, cy = 40, stroke = 12;
+  const circ = 2 * Math.PI * r;
+  const passArc = (passed / total) * circ;
+  return `
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--red)" stroke-width="${stroke}"/>
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--green)" stroke-width="${stroke}"
+      stroke-dasharray="${passArc} ${circ}" stroke-dashoffset="${circ * 0.25}" transform="rotate(-90 ${cx} ${cy})"/>`;
+}
+</script>
+
+<script>
+// ── SETTINGS TAB ──────────────────────────────────────────────────────────────
+async function loadSettings() {
+  try {
+    const s = await fetch('/settings').then(r=>r.json());
+    currentSettings = s;
+    document.getElementById('s-industry').value   = s.default_industry || '';
+    document.getElementById('s-gate').value       = s.gate_pass_threshold ?? 6.0;
+    document.getElementById('s-adbudget').value   = s.default_ad_budget_usd ?? 500;
+    document.getElementById('s-dailybudget').value= s.daily_budget_usd ?? 1000;
+    document.getElementById('s-ceoname').value    = s.ceo_name || '';
+    document.getElementById('s-notion').checked   = !!s.notion_enabled;
+
+    // Pre-fill default industry in dashboard input
+    if (s.default_industry)
+      document.getElementById('industryInput').value = s.default_industry;
+
+    // Agent model selectors
+    const grid = document.getElementById('agentModelGrid');
+    const agents = Object.keys(s.agent_models || {});
+    grid.innerHTML = agents.map(name => `
+      <div class="agent-model-item">
+        <span class="am-name">${esc(name)}</span>
+        <select id="am-${name}" onchange="currentSettings.agent_models['${name}']=this.value">
+          <option value="deepseek-chat"     ${s.agent_models[name]==='deepseek-chat'    ?'selected':''}>chat</option>
+          <option value="deepseek-reasoner" ${s.agent_models[name]==='deepseek-reasoner'?'selected':''}>reasoner</option>
+        </select>
+      </div>`).join('');
+  } catch(e) {
+    console.error('Settings load error', e);
+  }
+}
+
+async function saveSettings() {
+  const patch = {
+    default_industry:     document.getElementById('s-industry').value.trim() || undefined,
+    gate_pass_threshold:  parseFloat(document.getElementById('s-gate').value) || undefined,
+    default_ad_budget_usd:parseFloat(document.getElementById('s-adbudget').value) || undefined,
+    daily_budget_usd:     parseFloat(document.getElementById('s-dailybudget').value) || undefined,
+    ceo_name:             document.getElementById('s-ceoname').value.trim() || undefined,
+    notion_enabled:       document.getElementById('s-notion').checked,
+    agent_models:         currentSettings.agent_models,
+  };
+  // Remove undefined keys
+  Object.keys(patch).forEach(k => patch[k]===undefined && delete patch[k]);
+  try {
+    const res = await fetch('/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
+    currentSettings = await res.json();
+    if(currentSettings.default_industry)
+      document.getElementById('industryInput').value = currentSettings.default_industry;
+    const toast = document.getElementById('saveToast');
+    toast.style.display = 'inline';
+    setTimeout(()=>toast.style.display='none', 2500);
+  } catch(e) {
+    alert('Save failed: ' + e);
+  }
+}
+
+// ── MEMORY TAB ────────────────────────────────────────────────────────────────
+let currentMemAgent = null;
+let currentMemData  = null;
+let currentMemTab   = 'nodes';
+
+const nodeTypeColors = {
+  Industry:   '#4f8ef7',
+  Product:    '#3fcf8e',
+  PainPoint:  '#f05a5a',
+  Competitor: '#f0a83a',
+  Pattern:    '#9b6ef7',
+  Insight:    '#3fd4cf',
+  Risk:       '#f06aaa',
+};
+const nodeTypeIcons = {
+  Industry:   '🏭',
+  Product:    '📦',
+  PainPoint:  '🔥',
+  Competitor: '🏴',
+  Pattern:    '🔮',
+  Insight:    '💡',
+  Risk:       '⚠️',
+};
+
+async function loadMemory() {
+  const sidebar = document.getElementById('memAgentList');
+  try {
+    const data = await fetch('/memory').then(r => r.json());
+    const agents = data.agents || [];
+    sidebar.innerHTML = '<div style="padding:8px 14px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);">Select Agent</div>';
+    agents.forEach(a => {
+      const hasMemory = a.nodes > 0;
+      const div = document.createElement('div');
+      div.style.cssText = 'display:flex;align-items:center;gap:9px;padding:7px 14px;cursor:pointer;transition:background .15s;';
+      div.onmouseover = () => div.style.background = 'var(--surface2)';
+      div.onmouseout  = () => div.style.background = currentMemAgent === a.agent ? 'var(--surface2)' : '';
+      div.onclick = () => selectMemAgent(a.agent);
+      div.id = 'mem-agent-' + a.agent;
+      div.innerHTML = `
+        <div style="width:7px;height:7px;border-radius:50%;background:${hasMemory ? 'var(--green)' : 'var(--border)'};flex-shrink:0;"></div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:11px;font-weight:600;">${esc(a.agent)}</div>
+          <div style="font-size:9px;color:var(--muted);">${a.nodes} nodes · ${a.edges} edges</div>
+        </div>
+        ${hasMemory ? `<div style="font-size:9px;color:var(--green);">●</div>` : ''}
+      `;
+      sidebar.appendChild(div);
+    });
+    if (currentMemAgent) selectMemAgent(currentMemAgent);
+  } catch(e) {
+    sidebar.innerHTML = `<div style="color:var(--red);padding:12px;font-size:11px;">${esc(String(e))}</div>`;
+  }
+}
+
+async function selectMemAgent(name) {
+  currentMemAgent = name;
+  // Highlight selected
+  document.querySelectorAll('[id^="mem-agent-"]').forEach(el => el.style.background = '');
+  const sel = document.getElementById('mem-agent-' + name);
+  if (sel) sel.style.background = 'var(--surface2)';
+
+  document.getElementById('memContent').innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;">Loading…</div>';
+  try {
+    const data = await fetch('/memory/' + encodeURIComponent(name)).then(r => r.json());
+    currentMemData = data;
+    renderMemStats(data);
+    document.getElementById('memGraphTabs').style.display = 'flex';
+    showMemTab(currentMemTab);
+  } catch(e) {
+    document.getElementById('memContent').innerHTML = `<div style="color:var(--red);padding:20px;">${esc(String(e))}</div>`;
+  }
+}
+
+function renderMemStats(data) {
+  const nodes = data.nodes || [];
+  const edges = data.edges || [];
+  const byType = {};
+  nodes.forEach(n => { byType[n.type] = (byType[n.type]||0) + 1; });
+  const pills = Object.entries(byType).map(([type, count]) => {
+    const col = nodeTypeColors[type] || '#6b7280';
+    const icon = nodeTypeIcons[type] || '●';
+    return `<span style="background:${col}22;color:${col};border:1px solid ${col}44;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;">${icon} ${type}: ${count}</span>`;
+  }).join('');
+  document.getElementById('memStatsBar').innerHTML = `
+    <div style="font-size:12px;font-weight:600;color:var(--text);margin-right:8px;">${esc(data.agent)}</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;align-items:center;">${pills || '<span style="color:var(--muted);font-size:11px;font-style:italic;">No memory yet — run the company first</span>'}</div>
+    <div style="margin-left:auto;font-size:10px;color:var(--muted);">${nodes.length} nodes · ${edges.length} edges</div>
+  `;
+}
+
+function showMemTab(tab) {
+  currentMemTab = tab;
+  ['nodes','edges','visual'].forEach(t => {
+    const btn = document.getElementById('memTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) {
+      btn.style.borderBottom = t === tab ? '2px solid var(--blue)' : '2px solid transparent';
+      btn.style.color = t === tab ? 'var(--blue)' : 'var(--muted)';
+    }
+  });
+  if (!currentMemData) return;
+  if (tab === 'nodes')  renderMemNodes();
+  if (tab === 'edges')  renderMemEdges();
+  if (tab === 'visual') renderMemGraph();
+}
+
+function renderMemNodes() {
+  const nodes = currentMemData.nodes || [];
+  const content = document.getElementById('memContent');
+  if (!nodes.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">No nodes yet — run the company to build memory.</div>';
+    return;
+  }
+  const grouped = {};
+  nodes.forEach(n => { (grouped[n.type] = grouped[n.type]||[]).push(n); });
+  let html = '';
+  Object.entries(grouped).forEach(([type, items]) => {
+    const col = nodeTypeColors[type] || '#6b7280';
+    const icon = nodeTypeIcons[type] || '●';
+    html += `<div style="margin-bottom:16px;">
+      <div style="font-size:10px;font-weight:700;color:${col};text-transform:uppercase;letter-spacing:.8px;margin-bottom:7px;">${icon} ${type} (${items.length})</div>
+      <div style="display:flex;flex-direction:column;gap:5px;">`;
+    items.forEach(n => {
+      const props = n.props || {};
+      const propStr = Object.entries(props).filter(([k,v]) => v!=null && v!=='').slice(0,4)
+        .map(([k,v]) => `<span style="color:var(--muted);font-size:10px;">${k}: <span style="color:var(--text);">${esc(String(v)).slice(0,40)}</span></span>`).join(' · ');
+      html += `<div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid ${col};border-radius:6px;padding:8px 12px;">
+        <div style="font-size:12px;font-weight:600;">${esc(n.label)}</div>
+        ${propStr ? `<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:6px;">${propStr}</div>` : ''}
+        <div style="font-size:9px;color:var(--muted);margin-top:3px;">Updated: ${(n.updated_at||'').slice(0,16)}</div>
+      </div>`;
+    });
+    html += '</div></div>';
+  });
+  content.innerHTML = html;
+}
+
+function renderMemEdges() {
+  const edges = currentMemData.edges || [];
+  const content = document.getElementById('memContent');
+  if (!edges.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">No edges yet.</div>';
+    return;
+  }
+  const relColors = {
+    HAS_PAIN_POINT:'#f05a5a', LED_TO_PRODUCT:'#3fcf8e', COMPETED_WITH:'#f0a83a',
+    CAUSED_KILL:'#f05a5a', CAUSED_PASS:'#3fcf8e', SOLVED_BY:'#4f8ef7',
+    RELATES_TO:'#9b6ef7', LEARNED_FROM:'#3fd4cf',
+  };
+  let html = '<div style="display:flex;flex-direction:column;gap:5px;">';
+  edges.forEach(e => {
+    const col = relColors[e.rel_type] || '#6b7280';
+    const count = (e.props||{}).count || 1;
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 12px;display:grid;grid-template-columns:1fr auto 1fr auto;align-items:center;gap:8px;">
+      <div style="font-size:11px;color:#c0c4d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        <span style="font-size:9px;color:var(--muted);">${esc(e.from_type||'')}</span><br>
+        <strong>${esc(e.from_label||'')}</strong>
+      </div>
+      <div style="text-align:center;">
+        <div style="background:${col}22;color:${col};border:1px solid ${col}44;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;white-space:nowrap;">${esc(e.rel_type)}</div>
+        ${count>1?`<div style="font-size:9px;color:var(--muted);text-align:center;">×${count}</div>`:''}
+      </div>
+      <div style="font-size:11px;color:#c0c4d0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        <span style="font-size:9px;color:var(--muted);">${esc(e.to_type||'')}</span><br>
+        <strong>${esc(e.to_label||'')}</strong>
+      </div>
+      <div style="font-size:9px;color:var(--muted);">${(e.created_at||'').slice(0,10)}</div>
+    </div>`;
+  });
+  html += '</div>';
+  content.innerHTML = html;
+}
+
+function renderMemGraph() {
+  const nodes = currentMemData.nodes || [];
+  const edges = currentMemData.edges || [];
+  const content = document.getElementById('memContent');
+  if (!nodes.length) {
+    content.innerHTML = '<div style="color:var(--muted);text-align:center;padding:40px;font-style:italic;">No graph data yet.</div>';
+    return;
+  }
+  // Simple SVG force-layout approximation (static positions by type)
+  const typeY = { Industry:80, Product:160, PainPoint:240, Competitor:320, Pattern:400, Insight:480, Risk:480 };
+  const typeCount = {};
+  const nodePos = {};
+  nodes.forEach(n => {
+    typeCount[n.type] = (typeCount[n.type]||0);
+    const x = 60 + (typeCount[n.type] % 5) * 160;
+    const y = typeY[n.type] || 200;
+    nodePos[n.id] = {x, y, label: n.label, type: n.type};
+    typeCount[n.type]++;
+  });
+
+  let svgEdges = '', svgNodes = '';
+  edges.slice(0,40).forEach(e => {
+    const from = nodePos[e.from_id], to = nodePos[e.to_id];
+    if (!from || !to) return;
+    const col = {HAS_PAIN_POINT:'#f05a5a',LED_TO_PRODUCT:'#3fcf8e',COMPETED_WITH:'#f0a83a',CAUSED_KILL:'#f05a5a',CAUSED_PASS:'#3fcf8e'}[e.rel_type] || '#3d4560';
+    svgEdges += `<line x1="${from.x}" y1="${from.y}" x2="${to.x}" y2="${to.y}" stroke="${col}" stroke-width="1.5" stroke-opacity="0.6"/>
+      <text x="${(from.x+to.x)/2}" y="${(from.y+to.y)/2-3}" fill="${col}" font-size="7" text-anchor="middle" opacity="0.8">${esc(e.rel_type)}</text>`;
+  });
+  nodes.slice(0,30).forEach(n => {
+    const p = nodePos[n.id];
+    if (!p) return;
+    const col = nodeTypeColors[n.type] || '#6b7280';
+    const short = n.label.length > 14 ? n.label.slice(0,13)+'…' : n.label;
+    svgNodes += `<circle cx="${p.x}" cy="${p.y}" r="18" fill="${col}33" stroke="${col}" stroke-width="1.5"/>
+      <text x="${p.x}" y="${p.y+4}" fill="${col}" font-size="7.5" text-anchor="middle" font-weight="600">${esc(short)}</text>`;
+  });
+
+  content.innerHTML = `
+    <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Knowledge graph for ${esc(currentMemAgent)} (showing up to 30 nodes / 40 edges)</div>
+    <div style="overflow:auto;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px;">
+      <svg width="860" height="560" style="min-width:860px;">
+        <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3d4560"/></marker></defs>
+        ${svgEdges}${svgNodes}
+      </svg>
+    </div>`;
+}
+
+async function clearAgentMemory() {
+  if (!currentMemAgent) return;
+  if (!confirm(`Clear ALL memory for ${currentMemAgent}? This cannot be undone.`)) return;
+  await fetch('/memory/' + encodeURIComponent(currentMemAgent), {method:'DELETE'});
+  currentMemData = null;
+  document.getElementById('memContent').innerHTML = '<div style="color:var(--green);text-align:center;padding:40px;">Memory cleared. Run the company to rebuild.</div>';
+  document.getElementById('memGraphTabs').style.display = 'none';
+  loadMemory();
+}
+
+// ── KAGGLE TAB ────────────────────────────────────────────────────────────────
+const KAGGLE_STEPS = ['scout','darwin','forge','optimus','helm'];
+const KAGGLE_KEYWORDS = {
+  scout:   ['SCOUT','🔭','scanning','selected','Downloading','Download'],
+  darwin:  ['DARWIN','🔬','EDA','strategy','Features'],
+  forge:   ['FORGE','⚙️','pipeline','CV SCORE','baseline'],
+  optimus: ['OPTIMUS','🔧','HPO','optim','ensemble','Optim'],
+  helm:    ['HELM','🚀','submit','leaderboard','rank'],
+};
+
+function getKaggleStep(msg) {
+  for (const [step, kws] of Object.entries(KAGGLE_KEYWORDS)) {
+    if (kws.some(k => msg.includes(k))) return step;
+  }
+  return null;
+}
+
+async function startKaggle() {
+  const slug = document.getElementById('kaggleSlug').value.trim() || null;
+  const btn  = document.getElementById('kaggleRunBtn');
+  btn.disabled = true; btn.textContent = '⏳ Running…';
+
+  // Reset UI
+  KAGGLE_STEPS.forEach(s => document.getElementById('kstep-'+s).className = 'kaggle-step');
+  document.getElementById('kaggleFeed').innerHTML = '';
+  document.getElementById('kaggleResult').innerHTML = '';
+  ['kpi-cv1','kpi-cv2','kpi-lb','kpi-rank'].forEach(id => document.getElementById(id).textContent='—');
+
+  // Connect SSE (reuse existing connection if dashboard is running)
+  if (!evtSource) connectSSE();
+
+  fetch('/kaggle/run', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({competition_slug: slug, target_type: 'tabular'})
+  }).catch(e => { addKaggleLog('❌ ' + e); btn.disabled=false; btn.textContent='🏆 Run Kaggle'; });
+
+  // Poll kaggle status
+  const iv = setInterval(async () => {
+    const r = await fetch('/kaggle/status');
+    const d = await r.json();
+    if (d.status !== 'running' && d.status !== 'idle') {
+      clearInterval(iv);
+      btn.disabled = false; btn.textContent = '🏆 Run Kaggle';
+      renderKaggleResult(d.result || {});
+    }
+  }, 3000);
+}
+
+function handleKaggleEvent(evt) {
+  if (evt.agent_name !== 'KAGGLE' && evt.chamber !== 'kaggle') return;
+  addKaggleLog(evt.message || '');
+  const step = getKaggleStep(evt.message || '');
+  if (step) {
+    KAGGLE_STEPS.forEach(s => {
+      const el = document.getElementById('kstep-'+s);
+      if (!el) return;
+      if (s === step) el.className = 'kaggle-step active';
+      else if (KAGGLE_STEPS.indexOf(s) < KAGGLE_STEPS.indexOf(step)) el.className = 'kaggle-step done';
+    });
+  }
+  const cv1m = (evt.message||'').match(/baseline CV[:\s]+([0-9.]+)/i);
+  if (cv1m) { const e=document.getElementById('kpi-cv1'); if(e) e.textContent=cv1m[1]; }
+  const cv2m = (evt.message||'').match(/optimized CV[:\s]+([0-9.]+)/i);
+  if (cv2m) { const e=document.getElementById('kpi-cv2'); if(e) e.textContent=cv2m[1]; }
+}
+function addKaggleLog(msg) {
+  const feed = document.getElementById('kaggleFeed');
+  if (!feed) return;
+  // Remove placeholder
+  const ph = feed.querySelector('div[style]');
+  if (ph && ph.textContent.includes('Enter a competition')) ph.remove();
+  const d = document.createElement('div');
+  const isErr = msg.startsWith('❌') || msg.startsWith('⚠️');
+  const isOk  = msg.startsWith('✅') || msg.includes('CV:') || msg.includes('rank');
+  d.style.cssText = `font-size:11px;padding:3px 0;color:${isErr?'var(--red)':isOk?'var(--green)':'#c0c4d0'};border-bottom:1px solid var(--border);`;
+  d.textContent = msg;
+  feed.appendChild(d);
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function renderKaggleResult(r) {
+  // Mark all steps done/error based on status
+  const status = r.status || 'done';
+  if (status === 'complete') {
+    KAGGLE_STEPS.forEach(s => document.getElementById('kstep-'+s).className = 'kaggle-step done');
+  } else if (status === 'error') {
+    const failedStep = KAGGLE_STEPS.find(s => !r[s+'_result']) || 'scout';
+    KAGGLE_STEPS.forEach(s => {
+      const idx = KAGGLE_STEPS.indexOf(s);
+      const fi  = KAGGLE_STEPS.indexOf(failedStep);
+      document.getElementById('kstep-'+s).className = 'kaggle-step ' + (idx < fi ? 'done' : idx === fi ? 'error' : '');
+    });
+  }
+
+  // Update KPIs
+  if (r.cv_score)         document.getElementById('kpi-cv1').textContent = r.cv_score.toFixed(5);
+  if (r.optimized_cv)     document.getElementById('kpi-cv2').textContent = r.optimized_cv.toFixed(5);
+  const lb = r.leaderboard_report || {};
+  if (lb.estimated_lb_score) document.getElementById('kpi-lb').textContent = lb.estimated_lb_score;
+  if (lb.estimated_rank)     document.getElementById('kpi-rank').textContent = lb.estimated_rank;
+
+  // Result summary
+  const comp = r.competition || {};
+  const top10 = lb.in_top_10_percent;
+  const summaryEl = document.getElementById('kaggleResult');
+  summaryEl.innerHTML = `
+    <div style="margin-bottom:8px;font-weight:700;color:var(--text);">
+      ${esc(comp.competition_name || comp.competition_slug || '?')}
+    </div>
+    ${lb.competition_summary ? `<div style="margin-bottom:8px;">${esc(lb.competition_summary)}</div>` : ''}
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+      <span style="background:${top10?'rgba(63,207,142,.15)':'rgba(240,90,90,.15)'};color:${top10?'var(--green)':'var(--red)'};border:1px solid ${top10?'var(--green)':'var(--red)'};padding:2px 8px;border-radius:10px;font-size:10px;font-weight:700;">
+        ${top10 ? '✅ TOP 10%' : '❌ Not top 10% yet'}
+      </span>
+    </div>
+    ${lb.next_steps ? `<div style="font-weight:600;margin-bottom:4px;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;">Next Steps</div>
+    ${lb.next_steps.map(s=>`<div style="margin-bottom:3px;">⚡ ${esc(s)}</div>`).join('')}` : ''}
+    ${lb.gap_to_top_10 ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(79,142,247,.08);border:1px solid rgba(79,142,247,.2);border-radius:5px;font-size:10px;color:var(--blue);">🎯 Gap to top 10%: ${esc(lb.gap_to_top_10)}</div>` : ''}
+  `;
+
+  loadKaggleHistory();
+}
+
+async function loadKaggleHistory() {
+  const r = await fetch('/kaggle/competitions').then(r => r.json());
+  const el = document.getElementById('kaggleHistory');
+  if (!r.competitions.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-style:italic;">No competitions run yet.</div>';
+    return;
+  }
+  el.innerHTML = r.competitions.map(c => `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:11px;font-weight:600;">${esc(c.slug)}</div>
+        <div style="font-size:9px;color:var(--muted);">${c.files.length} files · ${c.has_submission?'✅ submitted':'⏳ no submission'}</div>
+      </div>
+      <button onclick="document.getElementById('kaggleSlug').value='${esc(c.slug)}'" style="background:none;border:1px solid var(--border);color:var(--muted);padding:2px 7px;border-radius:4px;font-size:10px;cursor:pointer;">Re-run</button>
+    </div>`).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+  // SSE connects when you click Run or Send (single queue — only one consumer allowed)
+  // Poll run status every 4s and update badge even if SSE missed something
+  setInterval(async () => {
+    try {
+      const r = await fetch('/status');
+      const d = await r.json();
+      setStatus(d.status);
+      const btn = document.getElementById('runBtn');
+      if (d.status !== 'running' && btn && btn.disabled) {
+        setBusy(false);
+        if (d.result?.daily_report) {
+          const dr = d.result.daily_report;
+          updateKpi('kpi-spend','$'+(dr.total_spend_usd||0).toFixed(3));
+          updateKpi('kpi-revenue','$'+(dr.revenue_usd||0).toFixed(2));
+        }
+        if (d.result?.financial_model) {
+          const fm = d.result.financial_model;
+          if(fm.real_cac_usd) updateKpi('kpi-cac','$'+fm.real_cac_usd.toFixed(2));
+          if(fm.gross_margin_pct) updateKpi('kpi-margin',fm.gross_margin_pct.toFixed(1)+'%');
+        }
+      }
+    } catch(e) {}
+  }, 4000);
+});
+</script>
+</body>
+</html>

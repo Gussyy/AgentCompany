@@ -1,0 +1,23 @@
+{
+  "gate_pass_threshold": 6.0,
+  "daily_budget_usd": 1000,
+  "default_ad_budget_usd": 500,
+  "default_industry": "productivity tools",
+  "agent_models": {
+    "SENTRY": "deepseek-chat",
+    "ARIA": "deepseek-chat",
+    "NOVA": "deepseek-chat",
+    "QUANT": "deepseek-chat",
+    "GATE": "deepseek-reasoner",
+    "LEDGER": "deepseek-chat",
+    "ARCH": "deepseek-chat",
+    "PIXEL": "deepseek-chat",
+    "CORE": "deepseek-chat",
+    "VIGIL": "deepseek-chat",
+    "APEX": "deepseek-chat",
+    "HAVEN": "deepseek-chat",
+    "ORCA-1": "deepseek-chat"
+  },
+  "notion_enabled": true,
+  "ceo_name": "Rachata P."
+}
